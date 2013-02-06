@@ -13,6 +13,7 @@
 @interface MasterViewController () {
     NSMutableArray *_objects;
 }
+@property(strong,nonatomic) NSMutableData* receivedOne;
 @end
 
 @implementation MasterViewController
@@ -30,7 +31,63 @@
 
     UIBarButtonItem *addButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAdd target:self action:@selector(insertNewObject:)];
     self.navigationItem.rightBarButtonItem = addButton;
+    [self getData];
 }
+
+- (void)getData
+{
+    NSString* s = [@"http://kuwai.herokuapp.com/api/0/{\"method\":[\"list\",\"Good Company\",\"2013-01\"],\"who\":[\"test@t.com\",\"7b18ae007dab03abd77b397bf5058aa795a7352def052831629d2087c3bb8cba\",\"browser1\"]}" stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+    NSURL* url = [NSURL URLWithString:s];
+    NSMutableURLRequest* req = [[NSMutableURLRequest alloc]initWithURL:url cachePolicy:NSURLRequestReloadIgnoringCacheData timeoutInterval:6000];
+    [req setHTTPMethod:@"GET"];
+    [req setValue:@"application/x-www-form-urlencoded" forHTTPHeaderField:@"Content-Type"];
+    [req setHTTPShouldHandleCookies:YES];
+    
+    NSURLConnection* cnct = [[NSURLConnection alloc] initWithRequest:req delegate:self];
+    if (cnct) {
+        NSLog(@"Start loading");
+        self.receivedOne = [NSMutableData data];
+    }    
+}
+
+- (void)connection:(NSURLConnection*)connection didFailWithError:(NSError *)error
+{
+    NSLog(@"Error");
+    NSString* s = @"yeah";
+    s = [error description];
+    NSLog(@"%@",s);
+}
+
+- (void)connection:(NSURLConnection*)connection didReceiveResponse:(NSURLResponse *)response
+{
+    NSLog(@"-didReceiveResponse");
+    [self.receivedOne setLength:0];
+    NSLog(@"%@",response.MIMEType);
+    NSLog(@"%@",response.textEncodingName);
+    NSLog(@"%@",response.URL.resourceSpecifier);
+}
+
+- (void)connection:(NSURLConnection*)connection didReceiveData:(NSData *)data
+{
+    NSLog(@"-didReceivedData");
+    [self.receivedOne appendData:data];
+    NSLog(@"receivedOne's length is %dbytes",[self.receivedOne length]);
+}
+
+- (void)connectionDidFinishLoading:(NSURLConnection*)connection
+{
+    NSLog(@"-connectionDidFinishLoading");
+    NSLog(@"Succeeded! Received %d bytes of data",[self.receivedOne length]);
+    int len = [self.receivedOne length];
+    NSLog(@"length is, %d",len);
+    unsigned char aBuffer[len];
+    [self.receivedOne getBytes:aBuffer length:len];
+    NSString* resultString = [[NSString alloc]initWithBytesNoCopy:aBuffer length:len encoding:NSUTF8StringEncoding freeWhenDone:NO];
+    NSLog(@"-----------------------");
+    NSLog(@"%@",resultString);
+    NSLog(@"-----------------------");
+}
+
 
 - (void)didReceiveMemoryWarning
 {
