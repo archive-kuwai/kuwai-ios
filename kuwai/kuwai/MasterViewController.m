@@ -36,7 +36,8 @@
 
 - (void)getData
 {
-    NSString* s = [@"http://kuwai.herokuapp.com/api/0/{\"method\":[\"list\",\"Good Company\",\"2013-01\"],\"who\":[\"test@t.com\",\"7b18ae007dab03abd77b397bf5058aa795a7352def052831629d2087c3bb8cba\",\"browser1\"]}" stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+    //NSString* s = [@"http://kuwai.herokuapp.com/api/0/{\"method\":[\"list\",\"Good Company\",\"2013-01\"],\"who\":[\"test@t.com\",\"7b18ae007dab03abd77b397bf5058aa795a7352def052831629d2087c3bb8cba\",\"browser1\"]}" stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+    NSString* s = [@"http://kuwai.elasticbeanstalk.com/api/0/{\"method\":[\"list\",\"Good Company\",\"2013-01\"],\"who\":[\"oh@ta.com\",\"no-pw\",\"browser1\"]}" stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
     NSURL* url = [NSURL URLWithString:s];
     NSMutableURLRequest* req = [[NSMutableURLRequest alloc]initWithURL:url cachePolicy:NSURLRequestReloadIgnoringCacheData timeoutInterval:6000];
     [req setHTTPMethod:@"GET"];
@@ -86,6 +87,39 @@
     NSLog(@"-----------------------");
     NSLog(@"%@",resultString);
     NSLog(@"-----------------------");
+    //[self toArray:@"[ \"バナナ\", \"リンゴ\", \"パイナップル\" ]"];
+    //[self toArray:@"[ \"one\", \"two\", {\"three\":\"something\"} ]"];
+    [self toArray:resultString];
+}
+
+- (void)toArray:(NSString*)s
+{
+    // JSON -> NSArray
+    NSData* data = [s dataUsingEncoding:NSUTF8StringEncoding];
+    NSArray* aray = [NSJSONSerialization JSONObjectWithData:data options:0 error:nil];
+    NSLog(@"%@",aray);
+    _objects = [aray mutableCopy];
+    [self.tableView reloadData];
+    
+}
+
+- (void)toArray1:(NSString*)s
+{
+    // JSON -> NSArray
+    NSData* data = [s dataUsingEncoding:NSUTF8StringEncoding];
+    NSArray* aray = [NSJSONSerialization JSONObjectWithData:data options:0 error:nil];
+    NSLog(@"%@",aray);
+    NSLog(@"%@",aray[2]);
+    NSLog(@"%@",[aray[2] objectForKey:@"three"]);
+    NSLog(@"%@",aray[2][@"three"]);
+}
+
+- (void)toArray2:(NSString*)s
+{
+    // JSON -> NSArray
+    NSData* data = [s dataUsingEncoding:NSUTF8StringEncoding];
+    NSArray* aray = [NSJSONSerialization JSONObjectWithData:data options:0 error:nil];
+    NSLog(@"%@",aray);
 }
 
 
@@ -120,9 +154,13 @@
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
     UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"Cell" forIndexPath:indexPath];
-
+    /*
     NSDate *object = _objects[indexPath.row];
     cell.textLabel.text = [object description];
+    return cell;
+    */
+    NSDictionary* object = _objects[indexPath.row];
+    cell.textLabel.text = object[@"range"];
     return cell;
 }
 
@@ -162,8 +200,8 @@
 {
     if ([[segue identifier] isEqualToString:@"showDetail"]) {
         NSIndexPath *indexPath = [self.tableView indexPathForSelectedRow];
-        NSDate *object = _objects[indexPath.row];
-        [[segue destinationViewController] setDetailItem:object];
+        NSDictionary* object = _objects[indexPath.row];
+        [[segue destinationViewController] setDetailItem:object[@"range"]];
     }
 }
 
